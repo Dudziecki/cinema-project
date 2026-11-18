@@ -1,3 +1,4 @@
+
 services:
   db:
     image: postgres:17-alpine
@@ -5,14 +6,14 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: cinema_db
-      POSTGRES_USER: cinema_user
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     ports:
       - "5433:5432"
     volumes:
       - cinema_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cinema_user -d cinema_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cinema_db"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -29,7 +30,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=cinema_db;Username=cinema_user;Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=cinema_db;Username=postgres;Password=${POSTGRES_PASSWORD}
       Jwt__Key: ${JWT_KEY:?Set JWT_KEY in .env}
       Jwt__Issuer: CinemaApi
       Jwt__Audience: CinemaClient
