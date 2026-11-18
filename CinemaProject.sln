@@ -1,0 +1,36 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cinema.Contracts", "Cinema.Contracts\Cinema.Contracts.csproj", "{12D6CA09-99A8-48C4-9963-2C580ABF1B01}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cinema.Api", "Cinema.Api\Cinema.Api.csproj", "{12D6CA09-99A8-48C4-9963-2C580ABF1B02}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cinema.Blazor", "Cinema.Blazor\Cinema.Blazor.csproj", "{12D6CA09-99A8-48C4-9963-2C580ABF1B03}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cinema.Tests", "Cinema.Tests\Cinema.Tests.csproj", "{12D6CA09-99A8-48C4-9963-2C580ABF1B04}"
+EndProject
+Global
+    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+        Debug|Any CPU = Debug|Any CPU
+        Release|Any CPU = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+        {12D6CA09-99A8-48C4-9963-2C580ABF1B01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {12D6CA09-99A8-48C4-9963-2C580ABF1B01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {12D6CA09-99A8-48C4-9963-2C580ABF1B01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {12D6CA09-99A8-48C4-9963-2C580ABF1B01}.Release|Any CPU.Build.0 = Release|Any CPU
+        {12D6CA09-99A8-48C4-9963-2C580ABF1B02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {12D6CA09-99A8-48C4-9963-2C580ABF1B02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {12D6CA09-99A8-48C4-9963-2C580ABF1B02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {12D6CA09-99A8-48C4-9963-2C580ABF1B02}.Release|Any CPU.Build.0 = Release|Any CPU
+        {12D6CA09-99A8-48C4-9963-2C580ABF1B03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {12D6CA09-99A8-48C4-9963-2C580ABF1B03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {12D6CA09-99A8-48C4-9963-2C580ABF1B03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {12D6CA09-99A8-48C4-9963-2C580ABF1B03}.Release|Any CPU.Build.0 = Release|Any CPU
+        {12D6CA09-99A8-48C4-9963-2C580ABF1B04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {12D6CA09-99A8-48C4-9963-2C580ABF1B04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {12D6CA09-99A8-48C4-9963-2C580ABF1B04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {12D6CA09-99A8-48C4-9963-2C580ABF1B04}.Release|Any CPU.Build.0 = Release|Any CPU
+    EndGlobalSection
+EndGlobal

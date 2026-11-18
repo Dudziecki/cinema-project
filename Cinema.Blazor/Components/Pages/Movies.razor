@@ -1,0 +1,125 @@
+@page "/movies"
+@inject CinemaApiClient Api
+@inject AuthSession Session
+
+<PageTitle>Фильмы</PageTitle>
+<h1>Фильмы</h1>
+@if (!string.IsNullOrWhiteSpace(error)) { <p class="error">@error</p> }
+@if (Session.Role == "Admin")
+{
+    <section class="form-card">
+        <h2>@(editingId is null ? "Добавить фильм" : "Редактировать фильм")</h2>
+        <EditForm Model="form" OnValidSubmit="SaveAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <label>Название</label><InputText @bind-Value="form.Title" />
+            <label>Продолжительность (мин.)</label><InputNumber @bind-Value="form.DurationMinutes" />
+            <label>Год выпуска</label><InputNumber @bind-Value="form.ReleaseYear" />
+            <label>Жанр</label>
+            <InputSelect @bind-Value="form.GenreId">
+                <option value="0">Выберите жанр</option>
+                @foreach (var genre in genres) { <option value="@genre.Id">@genre.Name</option> }
+            </InputSelect>
+            <label>Описание</label><InputTextArea @bind-Value="form.Description" />
+            <div class="actions">
+                <button type="submit">Сохранить</button>
+                @if (editingId is not null) { <button type="button" class="secondary" @onclick="ResetForm">Отмена</button> }
+            </div>
+        </EditForm>
+    </section>
+}
+
+@if (loading)
+{
+    <p>Загрузка...</p>
+}
+else if (movies.Count == 0)
+{
+    <p>Фильмов пока нет.</p>
+}
+else
+{
+    <MovieTable Movies="movies" OnEdit="Edit" OnDelete="DeleteAsync" />
+}
+
+@code {
+    private List<MovieDto> movies = [];
+    private List<GenreDto> genres = [];
+    private MovieForm form = new();
+    private int? editingId;
+    private bool loading = true;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            genres = await Api.GetGenresAsync();
+            movies = await Api.GetMoviesAsync();
+        }
+        catch (Exception ex) { error = ex.Message; }
+        finally { loading = false; }
+    }
+
+    private async Task SaveAsync()
+    {
+        error = null;
+        try
+        {
+            var dto = new MovieUpsertDto
+            {
+                Title = form.Title,
+                DurationMinutes = form.DurationMinutes,
+                ReleaseYear = form.ReleaseYear,
+                Description = form.Description,
+                GenreIds = form.GenreId > 0 ? [form.GenreId] : []
+            };
+            if (editingId is null) await Api.CreateMovieAsync(dto);
+            else await Api.UpdateMovieAsync(editingId.Value, dto);
+            ResetForm();
+            movies = await Api.GetMoviesAsync();
+        }
+        catch (Exception ex) { error = ex.Message; }
+    }
+
+    private void Edit(MovieDto movie)
+    {
+        editingId = movie.Id;
+        form = new MovieForm
+        {
+            Title = movie.Title,
+            DurationMinutes = movie.DurationMinutes,
+            ReleaseYear = movie.ReleaseYear,
+            Description = movie.Description ?? "",
+            GenreId = movie.GenreIds.FirstOrDefault()
+        };
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        error = null;
+        try
+        {
+            await Api.DeleteMovieAsync(id);
+            movies = await Api.GetMoviesAsync();
+        }
+        catch (Exception ex) { error = ex.Message; }
+    }
+
+    private void ResetForm()
+    {
+        editingId = null;
+        form = new MovieForm();
+    }
+
+    private sealed class MovieForm
+    {
+        [System.ComponentModel.DataAnnotations.Required, System.ComponentModel.DataAnnotations.StringLength(150, MinimumLength = 1)]
+        public string Title { get; set; } = "";
+        [System.ComponentModel.DataAnnotations.Range(1, 500)] public int DurationMinutes { get; set; } = 90;
+        [System.ComponentModel.DataAnnotations.Range(1888, 2100)] public int ReleaseYear { get; set; } = DateTime.Now.Year;
+        [System.ComponentModel.DataAnnotations.MaxLength(1000)] public string Description { get; set; } = "";
+        [System.ComponentModel.DataAnnotations.Range(1, int.MaxValue, ErrorMessage = "Выберите жанр.")]
+        public int GenreId { get; set; }
+    }
+}

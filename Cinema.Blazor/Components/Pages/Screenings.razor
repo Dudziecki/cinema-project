@@ -1,0 +1,92 @@
+@page "/screenings"
+@inject CinemaApiClient Api
+@inject AuthSession Session
+
+<PageTitle>Сеансы и билеты</PageTitle>
+<h1>Сеансы и продажа билетов</h1>
+@if (!string.IsNullOrWhiteSpace(error)) { <p class="error">@error</p> }
+@if (loading)
+{
+    <p>Загрузка...</p>
+}
+else
+{
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Фильм</th><th>Зал</th><th>Начало (UTC)</th><th>Цена</th><th>Вместимость</th></tr></thead>
+            <tbody>
+            @foreach (var screening in screenings)
+            {
+                <tr><td>@screening.MovieTitle</td><td>@screening.HallName</td><td>@screening.StartsAtUtc.ToString("dd.MM.yyyy HH:mm")</td><td>@screening.Price</td><td>@screening.HallCapacity</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (Session.IsAuthenticated)
+{
+    <section class="form-card">
+        <h2>Продать билет</h2>
+        <EditForm Model="ticketForm" OnValidSubmit="SellAsync">
+            <DataAnnotationsValidator /><ValidationSummary />
+            <label>Сеанс</label>
+            <InputSelect @bind-Value="ticketForm.ScreeningId">
+                <option value="0">Выберите сеанс</option>
+                @foreach (var item in screenings) { <option value="@item.Id">@item.MovieTitle — @item.StartsAtUtc.ToString("dd.MM.yyyy HH:mm") UTC</option> }
+            </InputSelect>
+            <label>Место</label><InputNumber @bind-Value="ticketForm.SeatNumber" />
+            <label>Покупатель</label><InputText @bind-Value="ticketForm.CustomerName" />
+            <button type="submit">Оформить билет</button>
+        </EditForm>
+        @if (lastTicket is not null)
+        {
+            <p class="success">Билет №@lastTicket.Id оформлен. Место: @lastTicket.SeatNumber. Цена: @lastTicket.Price.</p>
+        }
+    </section>
+}
+else
+{
+    <p><a href="/login">Войдите</a>, чтобы оформлять билеты.</p>
+}
+
+@code {
+    private List<ScreeningDto> screenings = [];
+    private TicketForm ticketForm = new();
+    private TicketDto? lastTicket;
+    private string? error;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { screenings = await Api.GetScreeningsAsync(); }
+        catch (Exception ex) { error = ex.Message; }
+        finally { loading = false; }
+    }
+
+    private async Task SellAsync()
+    {
+        error = null;
+        lastTicket = null;
+        try
+        {
+            lastTicket = await Api.SellTicketAsync(new TicketCreateDto
+            {
+                ScreeningId = ticketForm.ScreeningId,
+                SeatNumber = ticketForm.SeatNumber,
+                CustomerName = ticketForm.CustomerName
+            });
+            ticketForm = new TicketForm { ScreeningId = ticketForm.ScreeningId };
+        }
+        catch (Exception ex) { error = ex.Message; }
+    }
+
+    private sealed class TicketForm
+    {
+        [System.ComponentModel.DataAnnotations.Range(1, int.MaxValue, ErrorMessage = "Выберите сеанс.")]
+        public int ScreeningId { get; set; }
+        [System.ComponentModel.DataAnnotations.Range(1, int.MaxValue)] public int SeatNumber { get; set; } = 1;
+        [System.ComponentModel.DataAnnotations.Required, System.ComponentModel.DataAnnotations.StringLength(100, MinimumLength = 2)]
+        public string CustomerName { get; set; } = "";
+    }
+}

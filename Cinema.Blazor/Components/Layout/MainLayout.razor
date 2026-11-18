@@ -1,0 +1,40 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject AuthSession Session
+@inject NavigationManager Navigation
+
+<header class="topbar">
+    <a class="brand" href="/">Cinema</a>
+    <nav>
+        <a href="/movies">Фильмы</a>
+        <a href="/screenings">Сеансы и билеты</a>
+        @if (Session.IsAuthenticated)
+        {
+            <span class="user">@Session.Username (@Session.Role)</span>
+            <button class="link-button" @onclick="Logout">Выйти</button>
+        }
+        else
+        {
+            <a href="/login">Войти</a>
+        }
+    </nav>
+</header>
+<CascadingValue Value="Session">
+    <main class="container">
+        @Body
+    </main>
+</CascadingValue>
+
+@code {
+    protected override void OnInitialized() => Session.Changed += Refresh;
+
+    private void Refresh() => _ = InvokeAsync(StateHasChanged);
+
+    private void Logout()
+    {
+        Session.SignOut();
+        Navigation.NavigateTo("/login");
+    }
+
+    public void Dispose() => Session.Changed -= Refresh;
+}

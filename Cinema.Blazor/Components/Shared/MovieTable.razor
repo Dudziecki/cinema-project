@@ -1,0 +1,33 @@
+@using Cinema.Blazor.Services
+@using Cinema.Contracts
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>Название</th><th>Год</th><th>Длительность</th><th>Жанры</th><th>Описание</th>@if (Session?.Role == "Admin") { <th>Действия</th> }</tr>
+        </thead>
+        <tbody>
+        @foreach (var movie in Movies)
+        {
+            <tr>
+                <td>@movie.Title</td><td>@movie.ReleaseYear</td><td>@movie.DurationMinutes мин.</td>
+                <td>@string.Join(", ", movie.Genres)</td><td>@movie.Description</td>
+                @if (Session?.Role == "Admin")
+                {
+                    <td class="nowrap">
+                        <button class="small" @onclick="() => OnEdit.InvokeAsync(movie)">Изменить</button>
+                        <button class="small danger" @onclick="() => OnDelete.InvokeAsync(movie.Id)">Удалить</button>
+                    </td>
+                }
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<MovieDto> Movies { get; set; } = [];
+    [Parameter] public EventCallback<MovieDto> OnEdit { get; set; }
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+    [CascadingParameter] public AuthSession? Session { get; set; }
+}

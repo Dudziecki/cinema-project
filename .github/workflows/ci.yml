@@ -1,0 +1,79 @@
+name: cinema-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-test-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get repository source code
+        uses: actions/checkout@v4
+
+      - name: Install .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore NuGet packages
+        run: dotnet restore CinemaProject.sln
+
+      - name: Build solution
+        run: dotnet build CinemaProject.sln --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test CinemaProject.sln --configuration Release --no-build --logger "console;verbosity=normal"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare API image tags
+        id: api_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/cinema-api
+          tags: |
+            type=sha
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and publish API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Cinema.Api/Dockerfile
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: ${{ steps.api_meta.outputs.tags }}
+          labels: ${{ steps.api_meta.outputs.labels }}
+
+      - name: Prepare Blazor image tags
+        id: blazor_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/cinema-blazor
+          tags: |
+            type=sha
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and publish Blazor image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Cinema.Blazor/Dockerfile
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: ${{ steps.blazor_meta.outputs.tags }}
+          labels: ${{ steps.blazor_meta.outputs.labels }}

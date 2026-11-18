@@ -1,0 +1,48 @@
+@page "/login"
+@inject CinemaApiClient Api
+@inject AuthSession Session
+@inject NavigationManager Navigation
+
+<PageTitle>Вход</PageTitle>
+<h1>Вход в систему</h1>
+<div class="form-card">
+    <EditForm Model="model" OnValidSubmit="LoginAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <label>Логин</label>
+        <InputText @bind-Value="model.Username" />
+        <label>Пароль</label>
+        <InputText type="password" @bind-Value="model.Password" />
+        <button type="submit" disabled="@busy">@(busy ? "Вход..." : "Войти")</button>
+    </EditForm>
+    @if (!string.IsNullOrWhiteSpace(error)) { <p class="error">@error</p> }
+    <p class="hint">Тестовые учётные записи: admin / Admin123! и cashier / Cashier123!</p>
+</div>
+
+@code {
+    private LoginForm model = new();
+    private string? error;
+    private bool busy;
+
+    private async Task LoginAsync()
+    {
+        busy = true;
+        error = null;
+        try
+        {
+            var result = await Api.LoginAsync(new LoginRequest(model.Username, model.Password));
+            Session.SignIn(result);
+            Navigation.NavigateTo("/movies");
+        }
+        catch (Exception ex) { error = ex.Message; }
+        finally { busy = false; }
+    }
+
+    private sealed class LoginForm
+    {
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Username { get; set; } = "";
+        [System.ComponentModel.DataAnnotations.Required, System.ComponentModel.DataAnnotations.MinLength(6)]
+        public string Password { get; set; } = "";
+    }
+}
